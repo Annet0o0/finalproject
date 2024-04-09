@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from flask import render_template, redirect, url_for, flash
-from flask_login import current_user, login_required, login_user, logout_user
+from flask_login import login_required, logout_user, current_user, login_user
+# from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.utils import secure_filename
 
 from . import app, db
-from .forms import ReviewForm, MovieForm
-from .models import Movie, Review
+from .forms import ReviewForm, MovieForm, LoginForm, RegistrationForm
+from .models import Movie, Review, User
 
 BASEDIR = Path(__file__).parent
 UPLOAD_FOLDER = BASEDIR / 'static' / 'images'
@@ -77,4 +78,44 @@ def delete_review(id):
     db.session.commit()
     return redirect(url_for('reviews'))
 
+@app.route('/login/', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = LoginForm()
+    # categories = Category.query.all()
+    if form.validate_on_submit():
+        user = User.query.filter(User.username == form.username.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember.data)
+            flash('Вход выполнен!', 'alert-success')
+            return redirect(url_for('index'))
+        else:
+            flash('Вход не выполнен!', 'alert-danger')
+    return render_template('login.html', form=form)
 
+
+@app.route('/registration/', methods=['GET', 'POST'])
+def registration():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    # categories = Category.query.all()
+    if form.validate_on_submit():
+        user = User()
+        user.username = form.username.data
+        user.name = form.name.data
+        user.email = form.email.data
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Регистрация прошла успешно!', 'alert-success')
+        return redirect(url_for('login'))
+    return render_template('registration.html', form=form)
+
+
+@app.route('/logout/')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))

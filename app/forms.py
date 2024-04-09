@@ -25,3 +25,17 @@ class MovieForm(FlaskForm):
                                   FileAllowed(['jpg', 'jpeg', 'png'], message="Неверный формат файла")])
     submit = SubmitField('Добавить фильм')
 
+class LoginForm(FlaskForm):
+    username = StringField("Имя пользователя", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    remember = BooleanField("Запомнить меня")
+    submit = SubmitField('Войти')
+
+class RegistrationForm(FlaskForm):
+    username = StringField("Имя пользователя", validators=[DataRequired()])
+    name = StringField("Имя", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email(message='Некорректный email')])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    password2 = PasswordField("Повторите пароль",
+                              validators=[DataRequired(), EqualTo('password', message='Пароли не совпадают')])
+    submit = SubmitField('Зарегистрироваться')
